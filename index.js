@@ -3,19 +3,39 @@ const pgBtnNum = 5;
 let currentPage = 1;
 let pokemons = [];
 
+// Function to display pagination 
 const updatePaginationDiv = (currentPage, numPages) => {
   $('#pagination').empty()
 
-  const startPage = 1;
-  const endPage = numPages;
-  for (let i = startPage; i <= endPage; i++) {
-    $('#pagination').append(`
-    <button class="btn btn-primary page ml-1 numberedButtons" value="${i}">${i}</button>
-    `)
+  if (currentPage > 1) {
+    $("#pagination").append(
+      `<button class ="btn btn-primary numberedButtons ml-1" id="firstPage" value="1">First</button>
+      <button class ="btn btn-primary numberedButtons ml-1" id="previousPage" value="${currentPage - 1}">Previous</button>`
+    )
   }
 
+  //Displays two page buttons before and after current page
+  const startPage = Math.max(1, currentPage - Math.floor(pgBtnNum / 2));
+  const endPage = Math.min(numPages, currentPage + Math.floor(pgBtnNum / 2));
+
+  for (let i = startPage; i <= endPage; i++) {
+    //Adds active class to page button on current page
+    (i == currentPage) ? active = "active" : active = "";
+    
+    $('#pagination').append(`
+    <button class="btn btn-primary page ml-1 numberedButtons ${active}" value="${i}">${i}</button>
+    `)
+  }
+  //Adds nextPage and lastPage buttons if currentPage is less than numPages(81)
+  if (currentPage < numPages) {
+    $("#pagination").append(
+      `<button class ="btn btn-primary numberedButtons ml-1" id="nextPage" value="${currentPage + 1}">Next</button>
+      <button class ="btn btn-primary numberedButtons ml-1" id="lastPage" value="${numPages}">Last</button>`
+    )
+  }
 }
 
+//Function to display up to 10 pokemon based on currentPage
 const paginate = async (currentPage, PAGE_SIZE, pokemons) => {
   selected_pokemons = pokemons.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
