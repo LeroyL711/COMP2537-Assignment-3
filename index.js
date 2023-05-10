@@ -52,11 +52,16 @@ const paginate = async (currentPage, PAGE_SIZE, pokemons) => {
         </div>  
         `)
   })
+
+  //Header to display number of pokemon currently being displayed
+  $("#numPokemonDisplayed").html(
+    `<h3> Showing ${selected_pokemons.length} of ${pokemons.length} Pokemon</h3>`
+   );
 }
 
 const setup = async () => {
 
-  // test out poke api using axios here
+  // Create filter buttons
   $("#pokeTypesFilter").empty();
   let typesResponse = await axios.get("https://pokeapi.co/api/v2/type");
   let pokemonTypes = typesResponse.data.results;
@@ -73,8 +78,14 @@ const setup = async () => {
     <label htmlfor="${type}" for="${type}"> ${type} </label>  `);
   });
 
+ $("#numPokemonDisplayed").empty();
+ 
+
+ 
 
   $('#pokeCards').empty()
+
+  //Retrieves 810 pokemon objects from the api and stores them in the pokemons array
   let response = await axios.get('https://pokeapi.co/api/v2/pokemon?offset=0&limit=810');
   pokemons = response.data.results;
 
@@ -83,6 +94,7 @@ const setup = async () => {
   var numPages = Math.ceil(pokemons.length / PAGE_SIZE)
   updatePaginationDiv(currentPage, numPages)
 
+  //Function to retrieve pokemon types
   const getPokemonTypes = async (pokemonName) => {
     const res = await axios.get(`
       https://pokeapi.co/api/v2/pokemon/${pokemonName}`
@@ -90,6 +102,7 @@ const setup = async () => {
     return res.data.types.map((type) => type.type.name);
   };
 
+  //On cnange function to filter out the types of pokemon to be retrieved
   $('body').on('change', '.typeFilter', async function (e) {
     const selectedTypes = $("input[name='type']:checked")
       .map(function () {
@@ -97,15 +110,22 @@ const setup = async () => {
         return this.value;
       }).get();
 
+    // If any types are selected, then filter the pokemon to be retrieved
     if (selectedTypes.length > 0) {
       let filteredTypes = await Promise.all(
-        pokemons.map(async (p) => {
-          const pokemonTypes = await getPokemonTypes(p.name);
+        /*iterates through each pokemon inside the pokemons array
+        and fetches each of their types*/
+        pokemons.map(async (pokemon) => {
+          const pokemonTypes = await getPokemonTypes(pokemon.name);
+
+          // Checks if every selected type is included in the pokemonTypes array
+          // If it is included, pokemon with that type are returned, otherwise null is returned
           return selectedTypes.every((type) => 
             pokemonTypes.includes(type))
-            ? p : null;
+            ? pokemon : null;
         })
       );
+      //All null values inside the filteredTypes array are removed
       pokemons = filteredTypes.filter((p) => p !== null);
     } else {
       pokemons = response.data.results;
@@ -162,7 +182,7 @@ const setup = async () => {
   $('body').on('click', ".numberedButtons", async function (e) {
     currentPage = Number(e.target.value)
     paginate(currentPage, PAGE_SIZE, pokemons)
-    console.log(pokemons.length)
+    console.log(pokemons.length);
 
     numPages = Math.floor(pokemons.length / PAGE_SIZE);
     updatePaginationDiv(currentPage, numPages)
